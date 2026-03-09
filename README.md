@@ -151,7 +151,7 @@ three `Path` displays subscribed to each topic.
 - M.Sc. Thesis: *Robot-Based UWB Localization Testbed and Simulation
   Environment*, TU Chemnitz, 2025 (Grade: 1.4)
 - Thesis pipeline repository:
-  [uwb-localization-pipeline](https://github.com/joectt/uwb-localization-pipeline)
+  [uwb-localization-pipeline](https://github.com/joecheng1028/uwb-localization-pipeline)
   — 8-stage Python pipeline processing ROS 2 bag files for UWB
   validation experiments
 
