@@ -23,6 +23,9 @@ public:
 
         sigma2_base_ = 0.01;
         initialised_ = false;
+        uwb_origin_set_ = false;
+        uwb_origin_x_ = 0.0;
+        uwb_origin_y_ = 0.0;
 
         odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
             "/odometry/filtered", 10,
@@ -55,8 +58,8 @@ private:
 
         if (dt <= 0.0) return;
 
-        double v     = msg->twist.twist.linear.x;               // linear velocity
-        double omega = msg->twist.twist.angular.z;              // angular velocity
+        double v     = -msg->twist.twist.linear.x;              // linear velocity (negated for UWB frame)
+        double omega = -msg->twist.twist.angular.z;             // angular velocity (negated for UWB frame)
         double theta = x_(2);
 
         x_(0) += v * cos(theta) * dt;                           // motion model px
@@ -76,9 +79,19 @@ private:
     {
         if (!initialised_) return;
 
+        double ux = msg->pose.pose.position.x / 10.0;   // raw dm → m
+        double uy = msg->pose.pose.position.y / 10.0;
+
+        // Store first UWB measurement as origin — subtract from all subsequent
+        if (!uwb_origin_set_) {
+            uwb_origin_x_ = ux;
+            uwb_origin_y_ = uy;
+            uwb_origin_set_ = true;
+        }
+
         Eigen::Vector2d z;
-        z(0) = msg->pose.pose.position.x;                         // UWB x
-        z(1) = msg->pose.pose.position.y;                         // UWB y
+        z(0) = ux - uwb_origin_x_;                      // UWB x origin-shifted
+        z(1) = uy - uwb_origin_y_;                      // UWB y origin-shifted
 
         double PDOP = 1.0;
         Eigen::Matrix2d R =
@@ -118,6 +131,9 @@ private:
 
     rclcpp::Time last_stamp_;
     bool         initialised_;
+    bool         uwb_origin_set_;
+    double       uwb_origin_x_;
+    double       uwb_origin_y_;
 };
 
 int main(int argc, char ** argv)
